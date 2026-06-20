@@ -1,0 +1,259 @@
+# ==============================================================
+# GRIP — Docker Compose Stack
+#
+# Services:
+#   zookeeper     — Kafka coordination
+#   kafka         — Message broker
+#   kafka-init    — One-shot: creates all Kafka topics
+#   postgres      — Persistent storage
+#   spark-master  — Spark cluster master
+#   spark-worker  — Spark cluster worker
+#   spark-job     — Submits the streaming processor
+#   backend-api   — FastAPI health / status endpoints
+#   backend-producers — Runs all four ingestion producers
+# ==============================================================
+
+networks:
+  grip-network:
+    driver: bridge
+
+volumes:
+  postgres-data:
+  spark-checkpoints:
+
+services:
+  # ---------------------------------------------------------------
+  # Zookeeper
+  # ---------------------------------------------------------------
+  zookeeper:
+    image: bitnami/zookeeper:3.9
+    container_name: grip-zookeeper
+    networks:
+      - grip-network
+    environment:
+      - ALLOW_ANONYMOUS_LOGIN=yes
+    healthcheck:
+      test: ["CMD-SHELL", "echo ruok | nc localhost 2181 | grep imok"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ---------------------------------------------------------------
+  # Kafka Broker
+  # ---------------------------------------------------------------
+  kafka:
+    image: bitnami/kafka:3.6
+    container_name: grip-kafka
+    networks:
+      - grip-network
+    ports:
+      - "9092:9092"
+      - "29092:29092"
+    environment:
+      - KAFKA_CFG_ZOOKEEPER_CONNECT=zookeeper:2181
+      - ALLOW_PLAINTEXT_LISTENER=yes
+      - KAFKA_CFG_LISTENERS=INTERNAL://:29092,EXTERNAL://:9092
+      - KAFKA_CFG_ADVERTISED_LISTENERS=INTERNAL://kafka:29092,EXTERNAL://localhost:9092
+      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT
+      - KAFKA_CFG_INTER_BROKER_LISTENER_NAME=INTERNAL
+      - KAFKA_CFG_AUTO_CREATE_TOPICS_ENABLE=true
+      - KAFKA_CFG_LOG_RETENTION_HOURS=24
+      - KAFKA_CFG_LOG_RETENTION_BYTES=1073741824
+    depends_on:
+      zookeeper:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "kafka-topics.sh --bootstrap-server localhost:29092 --list"]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+      start_period: 30s
+
+  # ---------------------------------------------------------------
+  # Kafka topic initialisation (one-shot)
+  # ---------------------------------------------------------------
+  kafka-init:
+    image: bitnami/kafka:3.6
+    container_name: grip-kafka-init
+    networks:
+      - grip-network
+    depends_on:
+      kafka:
+        condition: service_healthy
+    entrypoint: ["/bin/bash", "-c"]
+    command:
+      - |
+        echo "Creating Kafka topics..."
+
+        topics=("earthquakes" "weather" "air_quality" "wildfires")
+        for topic in "$${topics[@]}"; do
+          kafka-topics.sh --create \
+            --if-not-exists \
+            --bootstrap-server kafka:29092 \
+            --replication-factor 1 \
+            --partitions 3 \
+            --topic "$$topic"
+          echo "  ✓ Topic '$$topic' ready"
+        done
+
+        echo "All Kafka topics created successfully."
+    restart: "no"
+
+  # ---------------------------------------------------------------
+  # PostgreSQL
+  # ---------------------------------------------------------------
+  postgres:
+    image: postgres:16-alpine
+    container_name: grip-postgres
+    networks:
+      - grip-network
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_DB=grip_db
+      - POSTGRES_USER=grip
+      - POSTGRES_PASSWORD=grip_password
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U grip -d grip_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # ---------------------------------------------------------------
+  # Spark Master
+  # ---------------------------------------------------------------
+  spark-master:
+    image: bitnami/spark:3.5
+    container_name: grip-spark-master
+    networks:
+      - grip-network
+    ports:
+      - "8080:8080"
+      - "7077:7077"
+    environment:
+      - SPARK_MODE=master
+      - SPARK_MASTER_HOST=spark-master
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8080 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+
+  # ---------------------------------------------------------------
+  # Spark Worker
+  # ---------------------------------------------------------------
+  spark-worker:
+    image: bitnami/spark:3.5
+    container_name: grip-spark-worker
+    networks:
+      - grip-network
+    ports:
+      - "8081:8081"
+    environment:
+      - SPARK_MODE=worker
+      - SPARK_MASTER_URL=spark://spark-master:7077
+      - SPARK_WORKER_MEMORY=2g
+      - SPARK_WORKER_CORES=2
+    depends_on:
+      spark-master:
+        condition: service_healthy
+
+  # ---------------------------------------------------------------
+  # Spark Streaming Job
+  # ---------------------------------------------------------------
+  spark-job:
+    image: bitnami/spark:3.5
+    container_name: grip-spark-job
+    networks:
+      - grip-network
+    volumes:
+      - ./backend/spark/stream_processor.py:/opt/bitnami/spark/apps/stream_processor.py:ro
+      - ./backend/spark/spark_submit.sh:/opt/bitnami/spark/apps/spark_submit.sh:ro
+      - spark-checkpoints:/tmp/grip_checkpoints
+    environment:
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:29092
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - POSTGRES_DB=grip_db
+      - POSTGRES_USER=grip
+      - POSTGRES_PASSWORD=grip_password
+    depends_on:
+      spark-master:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      kafka-init:
+        condition: service_completed_successfully
+      postgres:
+        condition: service_healthy
+    entrypoint: ["/bin/bash", "/opt/bitnami/spark/apps/spark_submit.sh"]
+    restart: on-failure
+
+  # ---------------------------------------------------------------
+  # Backend — FastAPI (health / status API)
+  # ---------------------------------------------------------------
+  backend-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: grip-backend-api
+    networks:
+      - grip-network
+    ports:
+      - "8000:8000"
+    environment:
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - POSTGRES_DB=grip_db
+      - POSTGRES_USER=grip
+      - POSTGRES_PASSWORD=grip_password
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:29092
+      - SPARK_MASTER_URL=http://spark-master:8080
+      - LOG_LEVEL=INFO
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    command: ["uvicorn", "backend.main:app", "--host", "0.0.0.0", "--port", "8000", "--log-level", "info"]
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8000/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ---------------------------------------------------------------
+  # Backend — Ingestion Producers
+  # ---------------------------------------------------------------
+  backend-producers:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: grip-backend-producers
+    networks:
+      - grip-network
+    environment:
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - POSTGRES_DB=grip_db
+      - POSTGRES_USER=grip
+      - POSTGRES_PASSWORD=grip_password
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:29092
+      - NASA_FIRMS_MAP_KEY=${NASA_FIRMS_MAP_KEY:-}
+      - USGS_POLL_INTERVAL=60
+      - WEATHER_POLL_INTERVAL=300
+      - AIR_QUALITY_POLL_INTERVAL=300
+      - WILDFIRE_POLL_INTERVAL=600
+      - LOG_LEVEL=INFO
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      kafka-init:
+        condition: service_completed_successfully
+    command: ["python", "-m", "backend.ingestion.run_producers"]
+    restart: on-failure

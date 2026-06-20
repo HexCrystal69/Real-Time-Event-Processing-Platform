@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GRIP — Command Dashboard</title>
+  <link rel="stylesheet" href="/css/main.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+</head>
+<body>
+  <div class="app-layout">
+    <aside class="sidebar">
+      <div class="sidebar-brand">
+        <div class="logo">G</div>
+        <div><h1>GRIP</h1><span>Global Risk Intelligence</span></div>
+      </div>
+      <nav class="sidebar-nav">
+        <div class="nav-section">Command</div>
+        <a href="index.html" class="nav-link"><span class="icon">◉</span> Dashboard</a>
+        <a href="map.html" class="nav-link"><span class="icon">🌍</span> Global Risk Map</a>
+        <div class="nav-section">Intelligence</div>
+        <a href="earthquakes.html" class="nav-link"><span class="icon">⚡</span> Earthquakes</a>
+        <a href="wildfires.html" class="nav-link"><span class="icon">🔥</span> Wildfires</a>
+        <a href="weather.html" class="nav-link"><span class="icon">⛈</span> Weather</a>
+        <a href="air-quality.html" class="nav-link"><span class="icon">💨</span> Air Quality</a>
+        <div class="nav-section">Operations</div>
+        <a href="analytics.html" class="nav-link"><span class="icon">📊</span> Analytics</a>
+        <a href="forecasting.html" class="nav-link"><span class="icon">📈</span> Forecasting</a>
+        <a href="monitoring.html" class="nav-link"><span class="icon">🖥</span> Monitoring</a>
+        <a href="about.html" class="nav-link"><span class="icon">ℹ</span> About</a>
+      </nav>
+      <div class="sidebar-status">
+        <span class="status-dot live"></span>
+        <span class="ws-status-text">LIVE</span>
+      </div>
+    </aside>
+
+    <main class="main-content">
+      <header class="top-bar">
+        <div style="display:flex;align-items:center;gap:12px">
+          <button class="menu-toggle">☰</button>
+          <h2>Command Dashboard</h2>
+        </div>
+        <div class="top-bar-actions">
+          <span id="live-clock" style="font-family:var(--font-mono);font-size:12px;color:var(--text-muted)"></span>
+          <div class="btn-group">
+            <button class="btn" onclick="GRIP_API.exportCSV('earthquakes')">CSV</button>
+            <button class="btn" onclick="GRIP_API.exportJSON('alerts')">JSON</button>
+            <button class="btn btn-primary" onclick="GRIP_API.exportPDF()">PDF Report</button>
+          </div>
+        </div>
+      </header>
+
+      <div class="page-content fade-in" id="dashboard-content">
+        <div class="grid grid-4" id="stats-grid"></div>
+
+        <div class="grid grid-2" style="margin-top:16px">
+          <div class="card">
+            <div class="card-header"><span class="card-title">Events Per Hour (24h)</span></div>
+            <div class="chart-container"><canvas id="events-chart"></canvas></div>
+          </div>
+          <div class="card">
+            <div class="card-header"><span class="card-title">Unified Risk Distribution</span></div>
+            <div class="chart-container"><canvas id="risk-distribution-chart"></canvas></div>
+          </div>
+        </div>
+
+        <div class="grid grid-2" style="margin-top:16px">
+          <div class="card">
+            <div class="card-header"><span class="card-title">Active Alerts</span></div>
+            <div class="alert-feed" id="alert-feed"></div>
+          </div>
+          <div class="card">
+            <div class="card-header"><span class="card-title">Regional Risk Rankings</span></div>
+            <table class="data-table">
+              <thead><tr><th>Region</th><th>Score</th><th>Level</th><th>EQ</th><th>WF</th><th>WX</th><th>AQ</th></tr></thead>
+              <tbody id="risk-table-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="/js/config.js"></script>
+  <script src="/js/api.js"></script>
+  <script src="/js/websocket.js"></script>
+  <script src="/js/common.js"></script>
+  <script src="/js/dashboard.js"></script>
+</body>
+</html>

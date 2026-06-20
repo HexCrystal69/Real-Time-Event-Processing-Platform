@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GRIP — About</title>
+  <link rel="stylesheet" href="/css/main.css">
+</head>
+<body>
+  <div class="app-layout">
+    <aside class="sidebar">
+      <div class="sidebar-brand"><div class="logo">G</div><div><h1>GRIP</h1><span>Global Risk Intelligence</span></div></div>
+      <nav class="sidebar-nav">
+        <div class="nav-section">Command</div>
+        <a href="index.html" class="nav-link"><span class="icon">◉</span> Dashboard</a>
+        <a href="map.html" class="nav-link"><span class="icon">🌍</span> Global Risk Map</a>
+        <div class="nav-section">Intelligence</div>
+        <a href="earthquakes.html" class="nav-link"><span class="icon">⚡</span> Earthquakes</a>
+        <a href="wildfires.html" class="nav-link"><span class="icon">🔥</span> Wildfires</a>
+        <a href="weather.html" class="nav-link"><span class="icon">⛈</span> Weather</a>
+        <a href="air-quality.html" class="nav-link"><span class="icon">💨</span> Air Quality</a>
+        <div class="nav-section">Operations</div>
+        <a href="analytics.html" class="nav-link"><span class="icon">📊</span> Analytics</a>
+        <a href="forecasting.html" class="nav-link"><span class="icon">📈</span> Forecasting</a>
+        <a href="monitoring.html" class="nav-link"><span class="icon">🖥</span> Monitoring</a>
+        <a href="about.html" class="nav-link"><span class="icon">ℹ</span> About</a>
+      </nav>
+      <div class="sidebar-status"><span class="status-dot live"></span><span class="ws-status-text">LIVE</span></div>
+    </aside>
+    <main class="main-content">
+      <header class="top-bar">
+        <div style="display:flex;align-items:center;gap:12px"><button class="menu-toggle">☰</button><h2>About GRIP</h2></div>
+        <div class="top-bar-actions"><span id="live-clock" style="font-family:var(--font-mono);font-size:12px;color:var(--text-muted)"></span></div>
+      </header>
+      <div class="page-content fade-in about-section">
+        <div class="card">
+          <h3>Global Risk Intelligence Platform</h3>
+          <p>GRIP is a production-grade real-time global risk monitoring and intelligence system. It aggregates live data from authoritative sources — USGS earthquakes, NASA FIRMS wildfires, Open-Meteo weather and air quality — processes events through Kafka and Spark Streaming, and delivers unified risk intelligence through an interactive command dashboard.</p>
+
+          <h3>Architecture</h3>
+          <p>The platform follows a streaming data pipeline architecture:</p>
+          <ul>
+            <li><strong>Ingestion Layer</strong> — Async Python producers poll external APIs and publish to Kafka topics</li>
+            <li><strong>Streaming ETL</strong> — Spark Structured Streaming cleans, enriches, and detects anomalies</li>
+            <li><strong>Storage</strong> — PostgreSQL stores raw, processed, and analytics data</li>
+            <li><strong>Intelligence Layer</strong> — Risk scoring, alert engine, Prophet forecasting</li>
+            <li><strong>Presentation</strong> — FastAPI backend with WebSocket real-time updates and interactive dashboard</li>
+          </ul>
+
+          <h3>Technology Stack</h3>
+          <div class="tech-grid">
+            <div class="tech-item"><div class="tech-name">FastAPI</div><div class="tech-role">Backend API</div></div>
+            <div class="tech-item"><div class="tech-name">Kafka</div><div class="tech-role">Message Broker</div></div>
+            <div class="tech-item"><div class="tech-name">Spark</div><div class="tech-role">Stream Processing</div></div>
+            <div class="tech-item"><div class="tech-name">PostgreSQL</div><div class="tech-role">Data Storage</div></div>
+            <div class="tech-item"><div class="tech-name">Prophet</div><div class="tech-role">Forecasting</div></div>
+            <div class="tech-item"><div class="tech-name">Leaflet.js</div><div class="tech-role">Global Map</div></div>
+            <div class="tech-item"><div class="tech-name">Chart.js</div><div class="tech-role">Visualizations</div></div>
+            <div class="tech-item"><div class="tech-name">WebSockets</div><div class="tech-role">Real-Time Updates</div></div>
+          </div>
+
+          <h3>Data Sources</h3>
+          <ul>
+            <li><strong>USGS</strong> — Global earthquake events (60s poll)</li>
+            <li><strong>NASA FIRMS</strong> — Active wildfire detections (600s poll)</li>
+            <li><strong>Open-Meteo</strong> — Weather observations for 5 global cities (300s poll)</li>
+            <li><strong>Open-Meteo AQ</strong> — Air quality index and pollutants (300s poll)</li>
+          </ul>
+
+          <h3>API Documentation</h3>
+          <p>Interactive API docs available at <a href="/docs" target="_blank">/docs</a> (Swagger UI) and <a href="/redoc" target="_blank">/redoc</a> (ReDoc).</p>
+
+          <h3>Version</h3>
+          <p>GRIP v3.0.0 — Phase 3: Analytics, Forecasting, Visualization & Production Layer</p>
+        </div>
+      </div>
+    </main>
+  </div>
+  <script src="/js/config.js"></script>
+  <script src="/js/api.js"></script>
+  <script src="/js/websocket.js"></script>
+  <script src="/js/common.js"></script>
+</body>
+</html>

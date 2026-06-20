@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GRIP — Forecasting Intelligence</title>
+  <meta name="description" content="GRIP forecasting intelligence — AQI, weather, wildfire activity, and earthquake frequency predictions powered by Prophet models.">
+  <link rel="stylesheet" href="/css/main.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+</head>
+<body>
+  <div class="app-layout">
+    <aside class="sidebar">
+      <div class="sidebar-brand"><div class="logo">G</div><div><h1>GRIP</h1><span>Global Risk Intelligence</span></div></div>
+      <nav class="sidebar-nav">
+        <div class="nav-section">Command</div>
+        <a href="index.html" class="nav-link"><span class="icon">◉</span> Dashboard</a>
+        <a href="map.html" class="nav-link"><span class="icon">🌍</span> Global Risk Map</a>
+        <div class="nav-section">Intelligence</div>
+        <a href="earthquakes.html" class="nav-link"><span class="icon">⚡</span> Earthquakes</a>
+        <a href="wildfires.html" class="nav-link"><span class="icon">🔥</span> Wildfires</a>
+        <a href="weather.html" class="nav-link"><span class="icon">⛈</span> Weather</a>
+        <a href="air-quality.html" class="nav-link"><span class="icon">💨</span> Air Quality</a>
+        <div class="nav-section">Operations</div>
+        <a href="analytics.html" class="nav-link"><span class="icon">📊</span> Analytics</a>
+        <a href="forecasting.html" class="nav-link"><span class="icon">📈</span> Forecasting</a>
+        <a href="monitoring.html" class="nav-link"><span class="icon">🖥</span> Monitoring</a>
+        <a href="about.html" class="nav-link"><span class="icon">ℹ</span> About</a>
+      </nav>
+      <div class="sidebar-status"><span class="status-dot live"></span><span class="ws-status-text">LIVE</span></div>
+    </aside>
+    <main class="main-content">
+      <header class="top-bar">
+        <div style="display:flex;align-items:center;gap:12px"><button class="menu-toggle">☰</button><h2>Forecasting Intelligence</h2></div>
+        <div class="top-bar-actions">
+          <span id="live-clock" style="font-family:var(--font-mono);font-size:12px;color:var(--text-muted)"></span>
+          <div class="btn-group">
+            <button class="btn btn-primary" onclick="triggerRegenerate()" id="regen-btn">Regenerate Forecasts</button>
+          </div>
+        </div>
+      </header>
+      <div class="page-content fade-in" id="forecast-content">
+        <div class="filter-bar" id="forecast-controls">
+          <label>Horizon:
+            <select id="horizon-select">
+              <option value="24h" selected>24 Hours</option>
+              <option value="7d">7 Days</option>
+              <option value="30d">30 Days</option>
+            </select>
+          </label>
+          <span id="forecast-status" style="font-size:12px;color:var(--text-muted);font-family:var(--font-mono)"></span>
+        </div>
+
+        <div class="grid grid-2">
+          <div class="card">
+            <div class="card-header"><span class="card-title">AQI Forecast</span><span class="forecast-badge" id="aqi-badge"></span></div>
+            <div class="chart-container tall" id="aqi-forecast-container"><canvas id="forecast-aqi-chart"></canvas></div>
+          </div>
+          <div class="card">
+            <div class="card-header"><span class="card-title">Temperature Forecast</span><span class="forecast-badge" id="weather-badge"></span></div>
+            <div class="chart-container tall" id="weather-forecast-container"><canvas id="forecast-weather-chart"></canvas></div>
+          </div>
+        </div>
+
+        <div class="grid grid-2" style="margin-top:16px">
+          <div class="card">
+            <div class="card-header"><span class="card-title">Wildfire Activity Forecast</span><span class="forecast-badge" id="wildfire-badge"></span></div>
+            <div class="chart-container tall" id="wildfire-forecast-container"><canvas id="forecast-wildfire-chart"></canvas></div>
+          </div>
+          <div class="card">
+            <div class="card-header"><span class="card-title">Earthquake Frequency Forecast</span><span class="forecast-badge" id="earthquake-badge"></span></div>
+            <div class="chart-container tall" id="earthquake-forecast-container"><canvas id="forecast-earthquake-chart"></canvas></div>
+          </div>
+        </div>
+
+        <div class="card" style="margin-top:16px">
+          <div class="card-title">Forecast Details</div>
+          <table class="data-table" id="forecast-details-table">
+            <thead><tr><th>Metric</th><th>Source</th><th>Location</th><th>Horizon</th><th>Data Points</th><th>Generated At</th></tr></thead>
+            <tbody id="forecast-details-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+  </div>
+  <script src="/js/config.js"></script>
+  <script src="/js/api.js"></script>
+  <script src="/js/websocket.js"></script>
+  <script src="/js/common.js"></script>
+  <script src="/js/forecasting-page.js"></script>
+</body>
+</html>

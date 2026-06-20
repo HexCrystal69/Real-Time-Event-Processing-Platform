@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GRIP — Earthquake Intelligence</title>
+  <link rel="stylesheet" href="/css/main.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+</head>
+<body>
+  <div class="app-layout">
+    <aside class="sidebar">
+      <div class="sidebar-brand"><div class="logo">G</div><div><h1>GRIP</h1><span>Global Risk Intelligence</span></div></div>
+      <nav class="sidebar-nav">
+        <div class="nav-section">Command</div>
+        <a href="index.html" class="nav-link"><span class="icon">◉</span> Dashboard</a>
+        <a href="map.html" class="nav-link"><span class="icon">🌍</span> Global Risk Map</a>
+        <div class="nav-section">Intelligence</div>
+        <a href="earthquakes.html" class="nav-link"><span class="icon">⚡</span> Earthquakes</a>
+        <a href="wildfires.html" class="nav-link"><span class="icon">🔥</span> Wildfires</a>
+        <a href="weather.html" class="nav-link"><span class="icon">⛈</span> Weather</a>
+        <a href="air-quality.html" class="nav-link"><span class="icon">💨</span> Air Quality</a>
+        <div class="nav-section">Operations</div>
+        <a href="analytics.html" class="nav-link"><span class="icon">📊</span> Analytics</a>
+        <a href="forecasting.html" class="nav-link"><span class="icon">📈</span> Forecasting</a>
+        <a href="monitoring.html" class="nav-link"><span class="icon">🖥</span> Monitoring</a>
+        <a href="about.html" class="nav-link"><span class="icon">ℹ</span> About</a>
+      </nav>
+      <div class="sidebar-status"><span class="status-dot live"></span><span class="ws-status-text">LIVE</span></div>
+    </aside>
+    <main class="main-content">
+      <header class="top-bar">
+        <div style="display:flex;align-items:center;gap:12px"><button class="menu-toggle">☰</button><h2>Earthquake Intelligence</h2></div>
+        <div class="top-bar-actions"><span id="live-clock" style="font-family:var(--font-mono);font-size:12px;color:var(--text-muted)"></span></div>
+      </header>
+      <div class="page-content fade-in" id="eq-content">
+        <div class="card" style="margin-bottom:16px">
+          <div class="card-title">Recent Events (30 days)</div>
+          <div class="stat-value" id="eq-recent-count">—</div>
+        </div>
+        <div class="grid grid-2">
+          <div class="card"><div class="card-title">Magnitude Distribution</div><div class="chart-container"><canvas id="mag-chart"></canvas></div></div>
+          <div class="card"><div class="card-title">Depth Analysis</div><div class="chart-container"><canvas id="depth-chart"></canvas></div></div>
+        </div>
+        <div class="grid grid-2" style="margin-top:16px">
+          <div class="card"><div class="card-title">Historical Trends</div><div class="chart-container"><canvas id="trend-chart"></canvas></div></div>
+          <div class="card"><div class="card-title">Risk Categories</div><div class="chart-container"><canvas id="risk-chart"></canvas></div></div>
+        </div>
+        <div class="grid grid-2" style="margin-top:16px">
+          <div class="card"><div class="card-title">Earthquake Frequency Forecast (7d)</div><div class="chart-container" id="eq-forecast-chart"></div></div>
+          <div class="card">
+            <div class="card-title">Recent Events</div>
+            <table class="data-table">
+              <thead><tr><th>Magnitude</th><th>Depth</th><th>Risk</th><th>Coordinates</th><th>Time</th></tr></thead>
+              <tbody id="eq-events-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+  <script src="/js/config.js"></script>
+  <script src="/js/api.js"></script>
+  <script src="/js/websocket.js"></script>
+  <script src="/js/common.js"></script>
+  <script src="/js/earthquakes.js"></script>
+</body>
+</html>
