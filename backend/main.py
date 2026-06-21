@@ -43,6 +43,11 @@ async def lifespan(app: FastAPI):
     try:
         init_database()
         logger.info("Database initialisation successful")
+        
+        # Seed the database if it is empty to ensure forecasting and analytics load immediately
+        from backend.database.seeder import seed_database_if_empty
+        seed_database_if_empty()
+        
         compute_risk_scores()
         check_and_generate_alerts()
         generate_all_forecasts()
